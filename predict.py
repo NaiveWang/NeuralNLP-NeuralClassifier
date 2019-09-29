@@ -1,5 +1,5 @@
-#!/usr/bin/env python 
-# coding: utf-8 
+#!/usr/bin/env python
+# coding: utf-8
 """
 Tencent is pleased to support the open source community by making NeuralClassifier available.
 Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -10,7 +10,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for thespecific language governing permissions and limitations under
 the License.
-""" 
+"""
 
 import codecs
 import math
@@ -39,7 +39,12 @@ from model.classification.attentive_convolution import AttentiveConvNet
 from model.classification.region_embedding import RegionEmbedding
 from model.model_util import get_optimizer, get_hierar_relations
 
+service = ('localhost', 4444)
+
 ClassificationDataset, ClassificationCollator, FastTextCollator,FastText, TextCNN, TextRNN, TextRCNN, DRNN, TextVDCNN, Transformer, DPCNN, AttentiveConvNet, RegionEmbedding
+
+import socket
+
 
 class Predictor(object):
     def __init__(self, config):
@@ -54,7 +59,7 @@ class Predictor(object):
         self.model = Predictor._get_classification_model(self.model_name, self.dataset, config)
         Predictor._load_checkpoint(config.eval.model_dir, self.model, self.use_cuda)
         self.model.eval()
-        
+
     @staticmethod
     def _get_classification_model(model_name, dataset, conf):
         model = globals()[model_name](dataset, conf)
@@ -68,7 +73,7 @@ class Predictor(object):
         else:
             checkpoint = torch.load(file_name, map_location=lambda storage, loc: storage)
         model.load_state_dict(checkpoint["state_dict"])
-    
+
     def predict(self, texts):
         """
         input texts should be json objects
@@ -85,21 +90,69 @@ class Predictor(object):
             return np.array(probs)
 
 if __name__ == "__main__":
+    print('loading model')
+    # create a socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # bind
+
+    sock.bind(service)
+    # load model config
     config = Config(config_file=sys.argv[1])
+    # load model entity
     predictor = Predictor(config)
+    # load infer batch(tied with cpu)
     batch_size = config.eval.batch_size
-    input_texts = []
-    predict_probs = []
+
+
     is_multi = config.task_info.label_type == ClassificationType.MULTI_LABEL
-    for line in codecs.open(sys.argv[2], "r", predictor.dataset.CHARSET):
-        input_texts.append(line.strip("\n"))
-    epoches = math.ceil(len(input_texts)/batch_size)
-    for i in range(epoches):
-        batch_texts = input_texts[i*batch_size:(i+1)*batch_size]
-        predict_prob = predictor.predict(batch_texts)
-        for j in predict_prob:
-            predict_probs.append(j)
-    with codecs.open("predict.txt", "w", predictor.dataset.CHARSET) as of:
+
+    # socket, start to listen
+    sock.listen(1)
+    while True:
+        # receieve data#print('reading data')
+        print('getting jizz from socks')
+
+
+        con, meat = sock.accept()
+        data=''
+        input_texts = []
+        predict_probs = []
+        while True:
+            buff=con.recv(4096)
+            if buff:
+                #print('\n',buff[-4:], '\n')
+                if buff[-4:] == b'\x02\x02\x02\x02':
+                    data+=buff[:-4].decode("utf-8", "ignore")
+                    break
+                data+=buff.decode("utf-8", "ignore")
+                #con.sendall(buff)
+            else:
+                break
+        tag=False
+        data=data.split('\n')
+        if len(data) < 0:
+            con.close()
+            continue
+        elif len(data) == 1:
+            data = [data[0], data[0]]
+            tag=True
+        #for d in data:
+        #print(data, predictor.dataset.CHARSET)
+
+        for line in data:
+            #print(line)
+            input_texts.append(line.strip("\n"))
+
+        epoches = math.ceil(len(input_texts)/batch_size)
+        print('predicting')
+
+        for i in range(epoches):
+            batch_texts = input_texts[i*batch_size:(i+1)*batch_size]
+            predict_prob = predictor.predict(batch_texts)
+            for j in predict_prob:
+                predict_probs.append(j)
+        #with codecs.open("predict.txt", "w", predictor.dataset.CHARSET) as of:
+        predict_label_namez=[]
         for predict_prob in predict_probs:
             if not is_multi:
                 predict_label_ids = [predict_prob.argmax()]
@@ -109,6 +162,12 @@ if __name__ == "__main__":
                 for j in range(0, config.eval.top_k):
                     if predict_prob[predict_label_idx[j]] > config.eval.threshold:
                         predict_label_ids.append(predict_label_idx[j])
-            predict_label_name = [predictor.dataset.id_to_label_map[predict_label_id] \
-                    for predict_label_id in predict_label_ids]
-            of.write(";".join(predict_label_name) + "\n") 
+            predict_label_namez += [predictor.dataset.id_to_label_map[predict_label_id] for predict_label_id in predict_label_ids]
+        # send back results
+        #print(predict_label_namez)
+        if tag:
+            con.sendall([predict_label_namez[0]].__str__().encode('utf-8'))
+        else:
+            con.sendall(predict_label_namez.__str__().encode('utf-8'))
+        con.close()
+        #of.write(";".join(predict_label_name) + "\n")

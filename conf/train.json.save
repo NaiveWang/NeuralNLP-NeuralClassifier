@@ -5,8 +5,8 @@
     "hierar_taxonomy": "data/rcv1.taxonomy",
     "hierar_penalty": 0.000001
   },
-  "device": "cpu",
-  "model_name": "TextRNN",
+  "device": "cuda",
+  "model_name": "",
   "checkpoint_dir": "checkpoint_dir_rcv1",
   "model_dir": "trained_model_rcv1",
   "data": {
@@ -21,9 +21,9 @@
     ],
     "generate_dict_using_json_files": true,
     "generate_dict_using_all_json_files": false,
-    "generate_dict_using_pretrained_embedding": false,
+    "generate_dict_using_pretrained_embedding": true,
     "dict_dir": "dict_rcv1",
-    "num_worker": 4
+    "num_worker": 2
   },
   "feature": {
     "feature_names": [
@@ -40,16 +40,16 @@
     "max_token_ngram_dict_size": 1000000,
     "max_keyword_dict_size": 100,
     "max_topic_dict_size": 100,
-    "max_token_len": 1536,
+    "max_token_len": 2048,
     "max_char_len": 2,
     "max_char_len_per_token": 2,
     "token_pretrained_file": "",
     "keyword_pretrained_file": ""
   },
   "train": {
-    "batch_size": 256,
+    "batch_size": 128,
     "start_epoch": 1,
-    "num_epochs": 5,
+    "num_epochs": 100,
     "num_epochs_static_embedding": 0,
     "decay_steps": 1000,
     "decay_rate": 1.0,
@@ -65,7 +65,7 @@
     "type": "embedding",
     "dimension": 64,
     "region_embedding_type": "context_word",
-    "region_size": 32,
+    "region_size": 64,
     "initializer": "uniform",
     "fan_mode": "FAN_IN",
     "uniform_bound": 0.25,
@@ -84,7 +84,7 @@
       3,
       4
     ],
-    "num_kernels": 64,
+    "num_kernels": 100,
     "top_k_max_pooling": 1
   },
   "TextRNN": {
@@ -106,10 +106,10 @@
     "text_file": "data/gen.json.01",
     "threshold": 0.5,
     "dir": "eval_dir",
-    "batch_size": 32,
+    "batch_size": 1024,
     "is_flat": true,
     "top_k": 100,
-    "model_dir": "checkpoint_dir_rcv1/TextRNN_best"
+    "model_dir": "checkpoint_dir_rcv1/TextCNN_best"
   },
   "TextVDCNN": {
     "vdcnn_depth": 9,

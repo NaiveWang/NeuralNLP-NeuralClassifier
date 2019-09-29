@@ -87,7 +87,7 @@ class DatasetBase(torch.utils.data.dataset.Dataset):
                         try:
                             self._insert_vocab(json.loads(_json_str), mode)
                         except:
-                            print(_json_str)
+                            print('%')
 
         # Dict can be generated using:
         # json files or/and pretrained embedding

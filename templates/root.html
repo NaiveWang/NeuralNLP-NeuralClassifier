@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <title>text classification server</title>
+    <meta content="">
+    <style></style>
+  </head>
+  <style>
+body {
+  font-family: Arial;
+  color: 000000;
+}
+
+
+.split {
+  height: 100%;
+  width: 50%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.left {
+  left: 0;
+  background-color: #f0f0f0;
+  
+  height: 100%;
+  width: 40%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.right {
+  right: 0;
+  background-color: #ffffff;
+  
+  height: 100%;
+  width: 60%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+</style>
+  <body>
+    <div class="left">
+        <form action = "/" method="post">
+            <textarea name="raw" required="required"></textarea><br>
+            <input type="submit" value='Go' name='infer'>
+        </form>
+    </div>
+    <div class="right">
+        <ul>
+        {% for result in results %}
+            <li>{{result}}</li>
+        {% endfor %}
+        </ul>
+    </div>
+  </body>
+</html>
