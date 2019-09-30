@@ -1,2 +1,6 @@
 
 *.pyc
+
+checkpoint_dir_rcv1/
+
+dict_rcv1/
