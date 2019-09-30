@@ -90,12 +90,9 @@ class Predictor(object):
             return np.array(probs)
 
 if __name__ == "__main__":
-    print('loading model')
-    # create a socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # bind
 
-    sock.bind(service)
+    print('loading model')
+    
     # load model config
     config = Config(config_file=sys.argv[1])
     # load model entity
@@ -105,69 +102,77 @@ if __name__ == "__main__":
 
 
     is_multi = config.task_info.label_type == ClassificationType.MULTI_LABEL
+    
+    # create a socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # bind
 
+    sock.bind(service)
     # socket, start to listen
     sock.listen(1)
     while True:
         # receieve data#print('reading data')
         print('getting jizz from socks')
 
-
-        con, meat = sock.accept()
-        data=''
-        input_texts = []
-        predict_probs = []
-        while True:
-            buff=con.recv(4096)
-            if buff:
-                #print('\n',buff[-4:], '\n')
-                if buff[-4:] == b'\x02\x02\x02\x02':
-                    data+=buff[:-4].decode("utf-8", "ignore")
+        try:
+            con, meat = sock.accept()
+            data=''
+            input_texts = []
+            predict_probs = []
+            while True:
+                buff=con.recv(4096)
+                if buff:
+                    #print('\n',buff[-4:], '\n')
+                    if buff[-4:] == b'\x02\x02\x02\x02':
+                        data+=buff[:-4].decode("utf-8", "ignore")
+                        break
+                    data+=buff.decode("utf-8", "ignore")
+                    #con.sendall(buff)
+                else:
                     break
-                data+=buff.decode("utf-8", "ignore")
-                #con.sendall(buff)
+            tag=False
+            data=data.split('\n')
+            if len(data) < 0:
+                con.close()
+                continue
+            elif len(data) == 1:
+                data = [data[0], data[0]]
+                tag=True
+            #for d in data:
+            #print(data, predictor.dataset.CHARSET)
+
+            for line in data:
+                #print(line)
+                input_texts.append(line.strip("\n"))
+
+            epoches = math.ceil(len(input_texts)/batch_size)
+            print('predicting')
+
+            for i in range(epoches):
+                batch_texts = input_texts[i*batch_size:(i+1)*batch_size]
+                predict_prob = predictor.predict(batch_texts)
+                for j in predict_prob:
+                    predict_probs.append(j)
+            #with codecs.open("predict.txt", "w", predictor.dataset.CHARSET) as of:
+            predict_label_namez=[]
+            for predict_prob in predict_probs:
+                if not is_multi:
+                    predict_label_ids = [predict_prob.argmax()]
+                else:
+                    predict_label_ids = []
+                    predict_label_idx = np.argsort(-predict_prob)
+                    for j in range(0, config.eval.top_k):
+                        if predict_prob[predict_label_idx[j]] > config.eval.threshold:
+                            predict_label_ids.append(predict_label_idx[j])
+                predict_label_namez += [predictor.dataset.id_to_label_map[predict_label_id] for predict_label_id in predict_label_ids]
+            # send back results
+            #print(predict_label_namez)
+            if tag:
+                con.sendall([predict_label_namez[0]].__str__().encode('utf-8'))
             else:
-                break
-        tag=False
-        data=data.split('\n')
-        if len(data) < 0:
+                con.sendall(predict_label_namez.__str__().encode('utf-8'))
             con.close()
-            continue
-        elif len(data) == 1:
-            data = [data[0], data[0]]
-            tag=True
-        #for d in data:
-        #print(data, predictor.dataset.CHARSET)
-
-        for line in data:
-            #print(line)
-            input_texts.append(line.strip("\n"))
-
-        epoches = math.ceil(len(input_texts)/batch_size)
-        print('predicting')
-
-        for i in range(epoches):
-            batch_texts = input_texts[i*batch_size:(i+1)*batch_size]
-            predict_prob = predictor.predict(batch_texts)
-            for j in predict_prob:
-                predict_probs.append(j)
-        #with codecs.open("predict.txt", "w", predictor.dataset.CHARSET) as of:
-        predict_label_namez=[]
-        for predict_prob in predict_probs:
-            if not is_multi:
-                predict_label_ids = [predict_prob.argmax()]
-            else:
-                predict_label_ids = []
-                predict_label_idx = np.argsort(-predict_prob)
-                for j in range(0, config.eval.top_k):
-                    if predict_prob[predict_label_idx[j]] > config.eval.threshold:
-                        predict_label_ids.append(predict_label_idx[j])
-            predict_label_namez += [predictor.dataset.id_to_label_map[predict_label_id] for predict_label_id in predict_label_ids]
-        # send back results
-        #print(predict_label_namez)
-        if tag:
-            con.sendall([predict_label_namez[0]].__str__().encode('utf-8'))
-        else:
-            con.sendall(predict_label_namez.__str__().encode('utf-8'))
-        con.close()
-        #of.write(";".join(predict_label_name) + "\n")
+        except Exception as E:
+            pid=os.fork()
+            if pid != 0:
+                exit(0)
