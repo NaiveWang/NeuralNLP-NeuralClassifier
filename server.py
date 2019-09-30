@@ -14,7 +14,7 @@ def infer_json():
             'doc_topic': []
             }, ensure_ascii=False)
         s+='\n'
-    return client.infer(s[:-1])
+    return json.dumps({"predict":ast.literal_eval(client.infer(s[:-1]))})
 @app.route('/', methods=['GET'])
 def root():
     # show the main page
@@ -26,7 +26,7 @@ def infer():
     if 'squash' in request.form:
         raw=request.form['raw'].replace('\n', '').replace('\r', '')
         return render_template('root.html', results=[], text=raw)
-    
+
     elif 'infer' in request.form:
         raw = request.form['raw']
         rawl=raw.split('\n')
@@ -44,4 +44,4 @@ def infer():
         #print(results)
         return render_template('root.html', results=ast.literal_eval(results), text=raw)
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(host='0.0.0.0', port=55555, debug=False)
