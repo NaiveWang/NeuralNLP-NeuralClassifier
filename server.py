@@ -5,7 +5,16 @@ import ast
 app = Flask(__name__)
 @app.route('/headless', methods=['POST'])
 def infer_json():
-    return client.infer(json.dumps(request.json, ensure_ascii=False))
+    s=''
+    for post in request.json['posts']:
+        s+=json.dumps({
+            "doc_label": [],
+            'doc_token': list(post),
+            'doc_keyword': [],
+            'doc_topic': []
+            }, ensure_ascii=False)
+        s+='\n'
+    return client.infer(s[:-1])
 @app.route('/', methods=['GET'])
 def root():
     # show the main page
@@ -24,10 +33,10 @@ def infer():
         jtext=''
         for line in rawl:
             jtext+=json.dumps({
-                    'doc_token': list(line)
-                'doc_token': list(line),
-                'doc_keyword': [],
-                'doc_topic': []
+                    "doc_label": [],
+                    'doc_token': list(line),
+                    'doc_keyword': [],
+                    'doc_topic': []
             }, ensure_ascii=False)
             jtext+='\n'
         #print(jtext)

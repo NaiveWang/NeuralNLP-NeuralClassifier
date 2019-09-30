@@ -51,8 +51,9 @@ body {
   <body>
     <div class="left">
         <form action = "/" method="post">
-            <textarea name="raw" required="required"></textarea><br>
+            <textarea name="raw" required="required">{{text}}</textarea><br>
             <input type="submit" value='Go' name='infer'>
+            <input type="submit" value='purge newline' name='squash'>
         </form>
     </div>
     <div class="right">
