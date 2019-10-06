@@ -1,6 +1,5 @@
 ![NeuralClassifier Logo](readme/logo.png)
 
-
 # NeuralClassifierService: A Service for Multi-label Text Classification Toolkit
 
 ## Introduction
