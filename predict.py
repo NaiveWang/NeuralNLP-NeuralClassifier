@@ -107,7 +107,7 @@ while True:
             # create a socket
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             # bind
-
+            sock.settimeout(15)
             sock.bind(service)
             # socket, start to listen
             sock.listen(64)

@@ -7,7 +7,7 @@ fuser -k 8080/tcp
 
 
 echo "starting backend socket daemon"
-$PYTHON predict.py conf/2.json & PRED=$!
+$PYTHON sock_server.py conf/2.json & PRED=$!
 echo "backend socket daemon started, pid is $PRED"
 echo "starting flask wrapper"
 
