@@ -1,12 +1,13 @@
 #!/bin/bash
 PYTHON=python
 
+echo "purging port"
 
-
+fuser -k 8080/tcp
 
 
 echo "starting backend socket daemon"
-$PYTHON predict.py conf/train.json & PRED=$!
+$PYTHON predict.py conf/2.json & PRED=$!
 echo "backend socket daemon started, pid is $PRED"
 echo "starting flask wrapper"
 

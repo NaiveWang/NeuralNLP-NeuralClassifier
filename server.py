@@ -6,6 +6,7 @@ app = Flask(__name__)
 @app.route('/headless', methods=['POST'])
 def infer_json():
     s=''
+    #print("+++", request.json, "+++")
     for post in request.json['posts']:
         s+=json.dumps({
             "doc_label": [],
