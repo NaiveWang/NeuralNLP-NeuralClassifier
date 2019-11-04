@@ -8,9 +8,9 @@ def infer(j_text):
     service=('localhost', 4444)
     sock.settimeout(10)
     sock.connect(service)
-    sock.sendall(j_text.encode('utf-8'))
+    sock.sendall(j_text.encode('utf-8')+b'\002'*4)
     result=''
-    sock.send(b'\002'*4)
+    #sock.send(b'\002'*4)
     while True:
         #print('%')
         recv = sock.recv(16)

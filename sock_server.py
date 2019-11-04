@@ -4,9 +4,10 @@ import os, sys
 
 service = ('localhost', 4444)
 
+data=''
 
 while True:
-    #try:
+    try:
         if __name__ == "__main__":
 
             print('loading model')
@@ -25,7 +26,7 @@ while True:
             sock.listen(64)
             while True:
                 # receieve data#print('reading data')
-                print('getting jizz from socks')
+                print('listening')
 
 
                 con, meat = sock.accept()
@@ -60,8 +61,7 @@ while True:
                 else:
                     con.sendall(predict_label_namez.__str__().encode('utf-8'))
                 con.close()
-    #except Exception as E:
-    #        print(E, 'restarting')
-    #        pid=os.fork()
-    #        #if pid != 0:
-    #        exit(0)
+    except Exception as E:
+            print('socket server:', data, E, 'restarting')
+            
+
