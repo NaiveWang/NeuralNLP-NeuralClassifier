@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 import json
 import ast
 import time
@@ -40,6 +40,20 @@ def infer_json():
         s+='\n'
 
     return json.dumps({"predict":ast.literal_eval(_infer(s[:-1]))})
+@app.route('/json', methods=['POST'])
+def infer_json_raw():
+    s=''
+    #print("+++", request.json, "+++")
+    for post in request.json['posts']:
+        s+=json.dumps({
+            "doc_label": [],
+            'doc_token': list(post.replace('\n', '')),
+            'doc_keyword': [],
+            'doc_topic': []
+            }, ensure_ascii=False)
+        s+='\n'
+
+    return jsonify({"predict":ast.literal_eval(_infer(s[:-1]))})
 @app.route('/', methods=['GET'])
 def root():
     # show the main page
