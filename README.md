@@ -61,11 +61,16 @@ The predict info will be outputed in predict.txt.
     }
 
     "doc_keyword" and "doc_topic" are optional.
-## Start classification service
+## Deploy classification service
 
-This service contains two module: a deep learning backend and a flask wrapper, they communicate via socket at port 4444. Above this is a shell wrapper to manipulate the two process: start them, keep them and kill them together when signal receieved.
+This service contains two module: a deep learning backend and a flask wrapper, they communicate via socket at port 4444. Above this is a shell wrapper to manipulate the two process: start them, keep them and kill them together when signal receieved. This server model is flexable for multi-classfier bind-in same web service while it is now deprecated since my socket protocal issues.
+
 
 >./start.sh #to start the whole service
+
+Now the all-one-model is stable for production:
+
+>./start1.sh #to start the all-in-one server, it loads both the web service and DeepLearning model in it with a uwsgi wrapper.
 
 the web page start at '0.0.0.0', port 55555 by default, or edit them in server.py.
 
